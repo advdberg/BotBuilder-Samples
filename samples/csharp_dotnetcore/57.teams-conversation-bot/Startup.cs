@@ -9,6 +9,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.BotBuilderSamples.Bots;
 using Microsoft.Extensions.Hosting;
+using System.Collections.Concurrent;
+using Microsoft.Bot.Schema;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -28,6 +30,9 @@ namespace Microsoft.BotBuilderSamples
 
             // Create the Bot Framework Adapter with error handling enabled.
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
+
+            // Create a global hashset for our ConversationReferences
+            services.AddSingleton<ConcurrentDictionary<string, ConversationReference>>();
 
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
             services.AddTransient<IBot, TeamsConversationBot>();

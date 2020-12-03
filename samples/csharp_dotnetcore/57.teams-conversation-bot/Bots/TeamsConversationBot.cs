@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -22,14 +23,36 @@ namespace Microsoft.BotBuilderSamples.Bots
         private string _appId;
         private string _appPassword;
 
-        public TeamsConversationBot(IConfiguration config)
+        // Dependency injected dictionary for storing ConversationReference objects used in NotifyController to proactively message users
+        private readonly ConcurrentDictionary<string, ConversationReference> _conversationReferences;
+
+        // Message to send to users when the bot receives a Conversation Update event
+        private const string WelcomeMessage = "Welcome to the Proactive Bot sample.  Navigate to http://localhost:3978/api/notify to proactively message everyone who has previously messaged this bot.";
+
+        public TeamsConversationBot(IConfiguration config, ConcurrentDictionary<string, ConversationReference> conversationReferences)
         {
             _appId = config["MicrosoftAppId"];
             _appPassword = config["MicrosoftAppPassword"];
+            _conversationReferences = conversationReferences;
+        }
+
+        private void AddConversationReference(Activity activity)
+        {
+            var conversationReference = activity.GetConversationReference();
+            _conversationReferences.AddOrUpdate(conversationReference.User.Id, conversationReference, (key, newValue) => conversationReference);
+        }
+
+        protected override Task OnConversationUpdateActivityAsync(ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
+        {
+            AddConversationReference(turnContext.Activity as Activity);
+
+            return base.OnConversationUpdateActivityAsync(turnContext, cancellationToken);
         }
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
+            AddConversationReference(turnContext.Activity as Activity);
+
             turnContext.Activity.RemoveRecipientMention();
             var text = turnContext.Activity.Text.Trim().ToLower();
 
@@ -37,6 +60,8 @@ namespace Microsoft.BotBuilderSamples.Bots
                 await MentionActivityAsync(turnContext, cancellationToken);
             else if(text.Contains("who"))
                 await GetSingleMemberAsync(turnContext, cancellationToken);
+            else if (text.Contains("marcel"))
+                await WhoIsActivityAsync(turnContext, cancellationToken);
             else if(text.Contains("update"))
                 await CardActivityAsync(turnContext, true, cancellationToken);
             else if(text.Contains("message"))
@@ -52,6 +77,18 @@ namespace Microsoft.BotBuilderSamples.Bots
             foreach (var teamMember in membersAdded)
             {
                 await turnContext.SendActivityAsync(MessageFactory.Text($"Welcome to the team {teamMember.GivenName} {teamMember.Surname}."), cancellationToken);
+            }
+        }
+
+        protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
+        {
+            foreach (var member in membersAdded)
+            {
+                // Greet anyone that was not the target (recipient) of this message.
+                if (member.Id != turnContext.Activity.Recipient.Id)
+                {
+                    await turnContext.SendActivityAsync(MessageFactory.Text(WelcomeMessage), cancellationToken);
+                }
             }
         }
 
@@ -238,6 +275,13 @@ namespace Microsoft.BotBuilderSamples.Bots
 
             var replyActivity = MessageFactory.Text($"Hello {mention.Text}.");
             replyActivity.Entities = new List<Entity> { mention };
+
+            await turnContext.SendActivityAsync(replyActivity, cancellationToken);
+        }
+
+        private async Task WhoIsActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
+        {   
+            var replyActivity = MessageFactory.Text($"Marcel is probably selling XBOX'es");
 
             await turnContext.SendActivityAsync(replyActivity, cancellationToken);
         }

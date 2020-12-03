@@ -1,31 +1,31 @@
 {
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.5/MicrosoftTeams.schema.json",
   "manifestVersion": "1.5",
-  "version": "1.0.0",
-  "id": "<<YOUR-MICROSOFT-APP-ID>>",
+  "version": "1.0.2",
+  "id": "0e3b1604-95f5-4bae-87bb-370763e1970f",
   "packageName": "com.teams.sample.teamsconversationbot",
   "developer": {
-    "name": "teamsConversationBot",
-    "websiteUrl": "https://www.microsoft.com",
-    "privacyUrl": "https://www.teams.com/privacy",
-    "termsOfUseUrl": "https://www.teams.com/termsofuser"
+    "name": "CTB",
+    "websiteUrl": "https://www.ctb.nl",
+    "privacyUrl": "https://www.ctb.nl/privacy",
+    "termsOfUseUrl": "https://www.ctb.nl/termsofuser"
   },
   "icons": {
     "outline": "icon-outline.png",
     "color": "icon-color.png"
   },
   "name": {
-    "short": "TeamsConversationBot",
-    "full": "TeamsConversationBot"
+    "short": "P365.Communicator",
+    "full": "P365.Communicator"
   },
   "description": {
-    "short": "TeamsConversationBot",
-    "full": "TeamsConversationBot"
+    "short": "Used for communicating with P365",
+    "full": "Used for communicating with P365"
   },
   "accentColor": "#FFFFFF",
   "bots": [
     {
-      "botId": "<<YOUR-MICROSOFT-APP-ID>>",
+      "botId": "0e3b1604-95f5-4bae-87bb-370763e1970f",
       "scopes": [
         "personal",
         "groupchat",
